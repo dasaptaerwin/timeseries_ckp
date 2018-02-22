@@ -6,6 +6,9 @@
 =======
 >>>>>>> 301e40f633e42a9f729bda64e0f1835f8e0d8700
 
+
+# data time series ini diukur di tiga lokasi, pada masing-masing lokasi pengukuran dilakukan 4 kali sehari, dua kali seminggu, selama 8 bulan di tahun 2017.
+
 # load data
 data(AirPassengers)
 AP<-AirPassengers
