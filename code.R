@@ -7,124 +7,120 @@
 >>>>>>> 301e40f633e42a9f729bda64e0f1835f8e0d8700
 
 
-# data time series ini diukur di tiga lokasi, pada masing-masing lokasi pengukuran dilakukan 4 kali sehari, dua kali seminggu, selama 8 bulan di tahun 2017.
+# README: data time series ini diukur di tiga lokasi, pada masing-masing lokasi pengukuran dilakukan 4 kali sehari, dua kali seminggu, selama 8 bulan di tahun 2017.
 
-# load data
-data(AirPassengers)
-AP<-AirPassengers
+# LOAD LIBRARY
+library('lubridate')
+library('tidyverse')
+install.packages('forecast')
+library('forecast')
+install.packages('tseries')
+library('tseries')
+install.packages('gridExtra')
+library('gridExtra')
+
+# LOAD DATA
 data<-read.csv('data.csv')
 
-ts.data<-as.POSIXct(data$COMBINE, format="%Y-%m-%d %H:%M")
-ts.data
+### TDS ###
 
-# inspect data
-class(AP)
-start(AP)
-end(AP)
-frequency(AP)
-summary(AP)
-plot(AP)
-cycle(AP)
-aggregate(AP)
-aggregate(AP, FUN=mean)
-plot(aggregate(AP))
-boxplot(AP~cycle(AP))
+# CONVERT TO TIME SERIES OBJECT
+data$combine <- as.POSIXct(paste(data$DATE, data$TIME_WIB), format="%Y-%m-%d %H:%M")
+data$combine
 
-# reading more data
-webdata<-"https://ryanwomack.com/data/UNRATE.csv"
-webdata2<-"https://ryanwomack.com/data/CPIAUCSL.csv"
-Unemployment<-read.csv(webdata, row.names=1)
-Urate<-ts(Unemployment$VALUE, start=c(1948,1), freq=12)
-Inflation<-read.csv(webdata2, row.names=1)
-Irate<-ts((Inflation$VALUE), start=c(1948,1), freq=12)
+data$ts.tds <- ts(data$TDS_PPM)
+class(data$ts.tds)
+data$ts.tempriver <- ts(data$TEMP_RIVER_C)
+class(data$ts.tempriver)
+data$ts.tempair <- ts(data$TEMP_AIR_C)
+class(data$ts.tempair)
 
-Urate.July<-window(Urate, start=c(1980,7),freq=TRUE)
-time(Urate)
-plot(Urate)
-abline(reg=lm(Urate~time(Urate)))
-decompose(Urate)
-plot(decompose(Urate))
-plot(Irate,Urate)
-ts.plot(Irate,Urate, col=c("blue","red"))
+plot(data$ts.tds)
+ggplot(data=data, aes(x = data$combine, y = data$ts.tds)) +
+  geom_line(stat = "identity") +
+  labs(title = "TDS PLOT Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "Tanggal-jam", y = "TDS (ppm)")
 
-acf(Urate)
-acf(AP)
-acf(ts.intersect(Urate, AP))
-ts.union(Urate,AP)
+plot(data$ts.tempriver)
+ggplot(data=data, aes(x = data$combine)) +
+  geom_line(aes(y = data$ts.tempriver, col = "blue")) +
+  geom_line(aes(y = data$ts.tempair, col = "red")) +
+  labs(title = "Temp air sungai dan temp udara Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "Tanggal-jam", y = "Temp air(derajat C)")
 
-plot(HoltWinters(Urate, alpha=0.001, beta=1, gamma=0))
-plot(HoltWinters(AP))
-plot(HoltWinters(AP, alpha=0.1, beta=0.2, gamma=0))
+ggplot(data=data, aes(x = data$combine, y = data$ts.tempair)) +
+  geom_line(stat = "identity") +
+  labs(title = "Temp udara Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "Tanggal-jam", y = "Temp (derajat C)")
 
+par(mfrow=c(2,1))
+plot(data$ts.tds)
+plot(data$ts.tempriver)
+plot(data$ts.tempair)
+dev.off()
 
-AP.hw <- HoltWinters(AP)
-plot(AP.hw)
-AP.predict<-predict(AP.hw, n.ahead=10*12)
-ts.plot(AP, AP.predict, lty=1:2)
+# MOVING AVERAGE (MA)
 
-UR.hw <- HoltWinters(Urate, seasonal="additive")
-UR.predict<-predict(UR.hw, n.ahead=10*12)
-ts.plot(Urate, UR.predict, lty=1:2)
+data$tdsma7 <- ma(data$ts.tds, order=7)   # orde mingguan (7 hari)
+data$tdsma30 <- ma(data$ts.tds, order=30) # orde bulanan (30 hari)
+data$tempriverma7 <- ma(data$ts.tempriver, order=7)
+data$tempriverma30 <- ma(data$ts.tempriver, order=30)
+data$tempairma7 <- ma(data$ts.tempair, order=7)
+data$tempairma30 <- ma(data$ts.tempair, order=30)
 
-#randomwalk
-x<-w<-rnorm(1000)
-for (t in 2:1000) x[t]<-x[t-1]+w[t]
-plot(x, type="l")
-acf(x)
-acf(diff(x))
+# CLEAN MISSING VALUES
+data$tdsma7 <- tsclean(data$tdsma7)
+data$tdsma30 <- tsclean(data$tdsma30)
+data$tempriverma7 <- tsclean(data$tempriverma7)
+data$tempriverma30 <- tsclean(data$tempriverma30)
+data$tempairma7 <- tsclean(data$tempairma7)
+data$tempairma30 <- tsclean(data$tempairma30)
 
-acf(diff(Urate))
+ggplot() +
+  geom_line(data=data, aes(x = data$combine, y = data$ts.tds, colour = "black")) +
+  geom_line(data=data, aes(x = data$combine, y = data$tdsma7, colour = "red"))  +
+  geom_line(data=data, aes(x = data$combine, y = data$tdsma30, color = "green"))  +
+  ylab('Nilai TDS')
 
-#stationary autoregressive process
-x<-w<-rnorm(1000)
-for (t in 2:1000) x[t]<-(x[t-1]/2)+w[t]
-plot(x, type="l")
-acf(diff(x))
+# DECOMPOSE
+## TDS
+tds_ma <- ts(na.omit(data$tdsma7), frequency=30)
+decomp <- stl(tds_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
-#partial autocorrelation
-pacf(x) 
-acf(x)
+tds_ma <- ts(na.omit(data$tdsma30), frequency=30)
+decomp <- stl(tds_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
-pacf(Urate)
-acf(Urate)
+## TEMPRIVER
+tempriver_ma <- ts(na.omit(data$tempriverma7), frequency=30)
+decomp <- stl(tempriver_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
-#autoregression model
-U.ar<-ar(Urate, method="mle")
-x.ar<-ar(x, method="mle")
-acf(U.ar$res[-1], na.action=na.pass)
-acf(x.ar$res[-1])
+tempriver_ma <- ts(na.omit(data$tempriverma30), frequency=30)
+decomp <- stl(tempriver_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
-#regression on time dimension
-Urate.reg<-lm(Urate~time(Urate))
-summary(Urate.reg)
-acf(resid(Urate.reg))
-pacf(resid(Urate.reg))
+## TEMPAIR
+tempair_ma <- ts(na.omit(data$tempairma7), frequency=30)
+decomp <- stl(tempair_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
-AP.reg<-lm(AP~time(AP))
-summary(AP.reg)
-confint(AP.reg)
-acf(resid(AP.reg))
-pacf(resid(AP.reg))
-
-#see book on use of Generalized Least Squares
-# and for seasonal time series
-
-#ARIMA (Autoregressive integrated moving average)
-#MA(3)
-AP.ma <- arima(AP, order=c(0,0,3)) #estimates moving average of three time periods of "white noise"
-#ARMA(1,1)
-AP.arma <- arima(AP, order=c(1,0,1)) #1 prior period of AP, 1 prior period of white noise
-#ARIMA(2,1,2)
-# this model is composed of 2 prior periods of AP, 2 prior periods of white noise
-# and a first-order difference
-AP.arima <- arima(AP, order=c(2,1,2)) 
-
-AP.predict<-predict(AP.arima, n.ahead=60)
-ts.plot(AP,AP.predict$pred, lty=1:2)
-
-#GARCH
-#Generalized autoregressive conditioned heteroskedastic
-library(tseries)
-garch(AP, grad="numerical")
+tempair_ma <- ts(na.omit(data$tempairma30), frequency=30)
+decomp <- stl(tempair_ma, s.window="periodic")
+deseasonal <- seasadj(decomp)
+plot(decomp)
 
 
+
+plot(data$ts.tds)
+plot(data$tdsma7)
+plot(data$tdsma30)
