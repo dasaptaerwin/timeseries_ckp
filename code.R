@@ -24,7 +24,7 @@ data<-read.csv('data.csv')
 
 ### TDS ###
 
-# CONVERT TO TIME SERIES OBJECT
+# CONVERT TO TIME SERIES OBJECT OK
 data$combine <- as.POSIXct(paste(data$DATE, data$TIME_WIB), format="%Y-%m-%d %H:%M")
 data$combine
 
@@ -35,35 +35,51 @@ class(data$ts.tempriver)
 data$ts.tempair <- ts(data$TEMP_AIR_C)
 class(data$ts.tempair)
 
-plot(data$ts.tds)
-ggplot(data=data, aes(x = data$combine, y = data$ts.tds)) +
-  geom_line(stat = "identity") +
-  labs(title = "TDS PLOT Curug Panganten, Bandung",
+## plot histogram OK
+ggplot(data=data, aes(data$TEMP_AIR_C)) +
+  geom_histogram(fill="blue") +
+  geom_histogram(aes(data$TEMP_RIVER_C), fill="red") +
+  labs(title = "Histogram temperatur udara (biru) vs air sungai (merah) Curug Panganten, Bandung",
        subtitle = "Maret-November 2017",
-       x = "Tanggal-jam", y = "TDS (ppm)")
+       x = "Temperatur (oC)")
 
+## plot histogram TDS ts OK
+ggplot(data=data, aes(data$TDS_PPM)) +
+  geom_histogram(fill="blue") +
+  labs(title = "Histogram TDS Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "TDS (ppm)")
+
+## plot histogram temp river vs air OK
 plot(data$ts.tempriver)
 ggplot(data=data, aes(x = data$combine)) +
-  geom_line(aes(y = data$ts.tempriver, col = "blue")) +
-  geom_line(aes(y = data$ts.tempair, col = "red")) +
+  geom_line(aes(y = data$ts.tempriver), col="red") +
+  geom_line(aes(y = data$ts.tempair), col="blue") +
   labs(title = "Temp air sungai dan temp udara Curug Panganten, Bandung",
        subtitle = "Maret-November 2017",
-       x = "Tanggal-jam", y = "Temp air(derajat C)")
+       x = "Bulan", y = "Temperatur (derajat C)") + theme(legend.position="top")
+
+## plot temp air vs river ts OK
+ggplot(data=data, aes(x = data$TEMP_RIVER_C, y=data$TEMP_AIR_C)) +
+  geom_point() +
+  labs(title = "Temp air sungai vs temp udara Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "Temperatur Air Sungai (oC)", y = "Temperatur Udara (oC)") 
 
 ggplot(data=data, aes(x = data$combine, y = data$ts.tempair)) +
   geom_line(stat = "identity") +
   labs(title = "Temp udara Curug Panganten, Bandung",
        subtitle = "Maret-November 2017",
-       x = "Tanggal-jam", y = "Temp (derajat C)")
+       x = "Bulan", y = "Temp (derajat C)")
 
-par(mfrow=c(2,1))
+## plot TDS ts
 plot(data$ts.tds)
-plot(data$ts.tempriver)
-plot(data$ts.tempair)
-dev.off()
+ggplot(data=data, aes(x = data$combine, y = data$ts.tds)) + geom_line() +
+  labs(title = "TDS PLOT Curug Panganten, Bandung",
+       subtitle = "Maret-November 2017",
+       x = "Bulan", y = "TDS (ppm)")
 
 # MOVING AVERAGE (MA)
-
 data$tdsma7 <- ma(data$ts.tds, order=7)   # orde mingguan (7 hari)
 data$tdsma30 <- ma(data$ts.tds, order=30) # orde bulanan (30 hari)
 data$tempriverma7 <- ma(data$ts.tempriver, order=7)
@@ -79,11 +95,18 @@ data$tempriverma30 <- tsclean(data$tempriverma30)
 data$tempairma7 <- tsclean(data$tempairma7)
 data$tempairma30 <- tsclean(data$tempairma30)
 
+par(mfrow=c(3,1))
+plot(data$ts.tds)
+plot(data$tdsma7)
+plot(data$tdsma30)
+
 ggplot() +
-  geom_line(data=data, aes(x = data$combine, y = data$ts.tds, colour = "black")) +
-  geom_line(data=data, aes(x = data$combine, y = data$tdsma7, colour = "red"))  +
-  geom_line(data=data, aes(x = data$combine, y = data$tdsma30, color = "green"))  +
-  ylab('Nilai TDS')
+  geom_line(data=data, aes(x = data$combine, y = data$ts.tds, col = "data")) +
+  geom_line(data=data, aes(x = data$combine, y = data$tdsma7, col = "MA orde 7"))  +
+  geom_line(data=data, aes(x = data$combine, y = data$tdsma30, col = "MA orde 30"))  +
+  labs(title = "Moving average TDS orde 7 dan 30 hari Curug Panganten, Bandung",
+       x = "Bulan", y = "TDS (ppm)",
+       subtitle = "Maret-November 2017") + theme(legend.position="top")
 
 # DECOMPOSE
 ## TDS
