@@ -153,41 +153,48 @@ p4 <- ggplot(data=data, aes(x = data$combine)) +
 
 grid.arrange(p1,p2,p3,p4,ncol=1)
 
-## ON TDS USING DECOMPOSE FUNCTION MULTIPLICATIVE
+## ON TDS USING DECOMPOSE FUNCTION MULTIPLICATIVE OK
 decompose_tds_mult <- decompose(tds_ma, "mult")
+decompose_tds_add <- decompose(tds_ma, "additive")
 plot(as.ts(decompose_tds_mult$seasonal))
 plot(as.ts(decompose_tds_mult$trend))
+
+### evaluating multiplicative vs additive OK
+par(mfrow=c(2,1))
 plot(as.ts(decompose_tds_mult$random))
-plot(decompose_tds_mult)
+plot(as.ts(decompose_tds_add$random))
 
-
-## results: we don't see any difference between decompose additive vs multiplicative
+## results: we don't see any difference between decompose additive vs multiplicative OK
 
 tds_ma <- ts(na.omit(data$tdsma30), frequency=30)
 decomp <- stl(tds_ma, s.window="periodic")
 deseasonal <- seasadj(decomp)
 plot(decomp)
 
-## TEMPRIVER
+## TEMPRIVER (tidak digunakan pasti seasonal)
+### orde 100
 tempriver_ma <- ts(na.omit(data$tempriverma7), frequency=100) #OK
 decomp_tempriver <- stl(tempriver_ma, s.window="periodic")
-deseasonal <- seasadj(decomp)
-plot(decomp)
+deseasonal <- seasadj(decomp_tempriver)
+plot(decomp_tempriver)
 
+# orde 30
 tempriver_ma <- ts(na.omit(data$tempriverma30), frequency=30)
-decomp <- stl(tempriver_ma, s.window="periodic")
-deseasonal <- seasadj(decomp)
-plot(decomp)
+decomp_tempriver30 <- stl(tempriver_ma, s.window="periodic")
+deseasonal <- seasadj(decomp_tempriver30)
+plot(decomp_tempriver30)
 
 ## TEMPAIR
+### orde 100
 tempair_ma <- ts(na.omit(data$tempairma7), frequency=100)
 decomp_tempair <- stl(tempair_ma, s.window="periodic")
-deseasonal <- seasadj(decomp)
-plot(decomp)
+deseasonal <- seasadj(decomp_tempair)
+plot(decomp_tempair)
 
+### orde 30
 tempair_ma <- ts(na.omit(data$tempairma30), frequency=30)
-decomp <- stl(tempair_ma, s.window="periodic")
-deseasonal <- seasadj(decomp)
+decomp_tempair30 <- stl(tempair_ma, s.window="periodic")
+deseasonal <- seasadj(decomp_tempair30)
 plot(decomp)
 
 # CORRELATIONS
@@ -196,7 +203,7 @@ ts.plot(data$tdsma7)
 ts.plot(data$tdsma30)
 ts.plot(data$ts.tds, data$tdsma7, data$tdsma30, col=c("green", "blue", "red"))
 ts.plot(data$ts.tds, data$ts.tempriver, col=c("green", "blue"))
-
+dev.off()
 
 dev.off()
 par(mar = c(5, 5, 3, 5))
@@ -279,3 +286,5 @@ plot(as.ts(decompose_tds$random))
 plot(decompose_tds)
 
 # end testing forecast
+
+
