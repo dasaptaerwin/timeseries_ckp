@@ -15,7 +15,7 @@ isntall.packages('tidyverse') # for data manipulation and visualization
 install.packages('forecast')  # for forecast and time series analysis
 install.packages('tseries')   # for time series analysis
 install.packages('gridExtra') # for panel/facet plotting
-install.packages('ggfortify')
+#install.packages('ggfortify')
 
 
 # LOAD LIBRARY (LOAD EVERYTIME YOU OPEN THIS CODE)
@@ -139,17 +139,25 @@ plot(decompose_tds_add)
 
 dev.off()
 
+decompose_tds_add$seasona <- tsclean(decompose_tds_add$seasona)
+decompose_tds_add$trend <- tsclean(decompose_tds_add$trend)
+decompose_tds_add$random <- tsclean(decompose_tds_add$random)
+
 p1 <- ggplot(data=data, aes(x = data$combine)) +
-  geom_line(aes(y = data$ts.tds))
+  geom_line(aes(y = data$ts.tds))+
+  xlab('month') + ylab('seasonal')
 
 p2 <- ggplot(data=data, aes(x = data$combine)) +
-  geom_line(aes(y = decompose_tds_add$seasonal))
+  geom_line(aes(y = decompose_tds_add$seasonal))+
+  xlab('month') + ylab('tds data')
             
 p3 <- ggplot(data=data, aes(x = data$combine)) +
-  geom_line(aes(y = decompose_tds_add$trend))
+  geom_line(aes(y = decompose_tds_add$trend))+
+  xlab('month') + ylab('trend')
 
 p4 <- ggplot(data=data, aes(x = data$combine)) +
-  geom_line(aes(y = decompose_tds_add$random))
+  geom_line(aes(y = decompose_tds_add$random))+
+  xlab('month') + ylab('random/noise')
 
 grid.arrange(p1,p2,p3,p4,ncol=1)
 
